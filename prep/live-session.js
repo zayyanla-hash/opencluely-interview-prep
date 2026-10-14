@@ -101,6 +101,7 @@ function createLiveSession(deps={}){
   const getBackend=deps.getBackend;
   const transcribeImpl=deps.transcribe;
   const spawnWhisper=deps.spawnWhisper||spawn; // main-only test seam; never an IPC option
+  const whisperConfig=deps.whisperConfig||configuration; // main-only test seam
   const state={
     phase:'idle', // idle|starting|live|pausing|paused|resuming
     epoch:0, briefId:null, app:'', allowSystem:false, withMic:false, scope:'',
@@ -172,7 +173,7 @@ function createLiveSession(deps={}){
   }
   function startWhisper(signal){
     if(transcribeImpl)return Promise.resolve(true);
-    const cfg=configuration();
+    const cfg=whisperConfig();
     const model=cfg&&(cfg.model||cfg.modelPath);
     if(!cfg||!cfg.available||!model)throw Error('Existing Whisper runtime, cached model or audio decoder is unavailable. No installation or download was attempted.');
     ensureTmp();

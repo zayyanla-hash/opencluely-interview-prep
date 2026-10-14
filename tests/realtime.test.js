@@ -593,7 +593,7 @@ test('unexpected ready transcription worker exit stops capture',async t=>{
   const {PassThrough}=require('node:stream');
   let child;
   const s=createLiveSession({getStore:()=>h.store,getBackend:()=>({run:async()=>JSON.stringify(GOOD)}),native:h.fakeNative,
-    spawnWhisper:()=>{child=new EventEmitter();child.stdout=new PassThrough();child.stderr=new PassThrough();child.stdin=new PassThrough();child.kill=()=>true;queueMicrotask(()=>child.stdout.write('{"ready":true}\n'));return child;}});
+    whisperConfig:()=>({available:true,python:'python3',model:'tiny.en.pt'}),spawnWhisper:()=>{child=new EventEmitter();child.stdout=new PassThrough();child.stderr=new PassThrough();child.stdin=new PassThrough();child.kill=()=>true;queueMicrotask(()=>child.stdout.write('{"ready":true}\n'));return child;}});
   t.after(()=>s.stop());
   await s.start({briefId:'live1',consent:true,app:'zoom.us'});
   child.exitCode=1;child.emit('exit',1);
