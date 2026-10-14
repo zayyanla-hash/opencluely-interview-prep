@@ -28,6 +28,7 @@ class FirstRunManager {
    * sentinel file, or .env exists but has no Gemini key.
    */
   needsOnboarding() {
+    if (['local', 'chatgpt'].includes((process.env.AI_PROVIDER || '').toLowerCase())) return false;
     if (!fs.existsSync(this.sentinelPath)) return true;
     if (!fs.existsSync(this.envPath)) return true;
     const content = this._readEnv();

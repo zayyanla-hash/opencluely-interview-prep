@@ -1,0 +1,38 @@
+<!doctype html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>ChatGPT account</title>
+<style>
+:root{font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',sans-serif;color:#192024;background:#f6f6f4}*{box-sizing:border-box}body{margin:0;padding:30px 34px}main{max-width:540px;margin:auto}header{display:flex;align-items:center;gap:14px;margin-bottom:26px}.mark{height:42px;width:42px;border-radius:14px;background:#1d2926;color:white;display:grid;place-items:center;font-size:23px;font-weight:500}h1{font-size:24px;font-weight:650;letter-spacing:-.035em;margin:0}h2{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.075em;color:#606a69;margin:0 0 12px}.sub{font-size:13px;color:#68736e;margin:5px 0 0;line-height:1.5}.card{border:1px solid #dfe3df;background:white;border-radius:14px;padding:21px;margin:14px 0}.row{display:flex;align-items:center;justify-content:space-between;gap:12px}.label{font-size:14px;font-weight:600}.status{font-size:12px;background:#e8eee9;border-radius:20px;padding:5px 9px;color:#384640}.status.off{background:#f1ede8;color:#785b41}.muted{font-size:12px;color:#6b7470;line-height:1.6;margin:10px 0}.button{cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:8px;border-radius:9px;border:1px solid #cbd3cf;background:white;padding:10px 14px;font-size:13px;font-weight:600;color:#1f302b}.button.primary{background:#1e3029;color:white;border-color:#1e3029}.button:hover{filter:brightness(.97)}.button:disabled{opacity:.45;cursor:not-allowed}.actionRow{display:flex;gap:8px;flex-wrap:wrap;margin-top:15px}select{width:100%;padding:11px;border-radius:9px;border:1px solid #cdd6cf;background:#fff;font-size:13px;color:#24342d}#message{min-height:36px;padding-top:12px;font-size:12px;white-space:pre-wrap;line-height:1.45;color:#54655e}.error{color:#9c3535!important}.divider{height:1px;background:#e8ece9;margin:17px 0}.hint{padding:12px;border:1px dashed #ccd5ce;border-radius:9px;font-size:12px;color:#5c6761;line-height:1.6}a{color:#315c48;text-decoration:underline}.small{font-size:11px;color:#78807b;margin-top:20px;line-height:1.55}
+</style></head><body><main><header><div class="mark">◎</div><div><h1>ChatGPT connection</h1><p class="sub">OpenCluely Personal · macOS</p></div></header>
+<div class="card"><div class="row"><h2>Account</h2><span id="badge" class="status off">Not connected</span></div><div class="label" id="identity">Connect your ChatGPT account</div><p class="muted" id="description">Authorize ChatGPT plan usage in your browser. Your password is never entered into this app.</p><div class="actionRow"><button id="connect" class="button primary">Continue with ChatGPT</button><button id="reauthorize" class="button" hidden>Enable plan usage</button><button id="disconnect" class="button" hidden>Disconnect</button></div></div>
+<div class="card"><h2>Model</h2><label for="model" class="muted">Choose from the models available to your connected ChatGPT account.</label><select id="model" disabled><option>Connect first</option></select><div class="actionRow"><button id="test" class="button" disabled>Test connection</button><button id="usage" class="button">Manage ChatGPT usage ↗</button></div><p class="muted">Requests count toward the Work/Codex allowance included in your plan. Setting an app limit does not add allowance.</p></div>
+<div class="hint"><b>Privacy:</b> ChatGPT requests are sent to OpenAI only after you authorize plan usage. Local Qwen remains available by choosing <code>AI_PROVIDER=local</code> in the app’s <code>.env</code> file. Screenshots are sent only when you trigger capture and use a supported model.</div><div id="message" aria-live="polite"></div><p class="small">This is a personal, open-source integration using the official Sign in with ChatGPT DevKit. This app is not affiliated with OpenAI.</p>
+<script>
+(()=>{
+  const $=s=>document.getElementById(s);let current=null;let busy=false;
+  function note(msg,failed=false){$('message').textContent=msg;$('message').className=failed?'error':'';}
+  function lock(v){busy=v;for(const id of ['connect','reauthorize','disconnect','model','test'])$(id).disabled=v;}
+  async function refresh(){
+    const state=await window.siwcAccount.state();current=state;
+    const s=state.session,active=s.status==='connected',sharing=active&&s.sharing;
+    $('badge').textContent=sharing?'Plan enabled':active?'Signed in':'Not connected';
+    $('badge').className='status'+(sharing?'':' off');
+    $('identity').textContent=s.identity?.email||s.profileLabel||(active?'Connected account':'Connect your ChatGPT account');
+    $('description').textContent=sharing?'Your ChatGPT plan is authorized for this app.':active?'Signed in, but plan usage has not been authorized.':'You will sign in securely in your browser, then approve plan usage.';
+    $('connect').hidden=active;$('reauthorize').hidden=!active||sharing;$('disconnect').hidden=!active;
+    $('connect').disabled=busy;$('reauthorize').disabled=busy;$('disconnect').disabled=busy;
+    $('model').replaceChildren();
+    if(sharing&&state.models.length){for(const m of state.models){const opt=document.createElement('option');opt.textContent=m.displayName||m.slug;opt.value=m.slug;$('model').append(opt);} $('model').value=state.model;}
+    else {const o=document.createElement('option');o.textContent=state.modelError||'Connect and authorize plan usage';$('model').append(o);}
+    $('model').disabled=busy||!sharing||!state.models.length;$('test').disabled=busy||!sharing||!state.models.length;
+    if(state.modelError)note(state.modelError,true);
+    if(!state.encryptionAvailable) note('macOS credential encryption is unavailable. Check that you are running on macOS with Keychain unlocked.',true);
+  }
+  async function action(task,description){if(busy)return;lock(true);note(description);try {const result=await task();await refresh();return result;}catch(e){note(e.message||'Operation failed',true);}finally{lock(false);await refresh().catch(()=>{});}}
+  $('connect').addEventListener('click',()=>action(()=>window.siwcAccount.signIn(),'Complete sign-in and plan-usage authorization in your browser.'));
+  $('reauthorize').addEventListener('click',()=>action(()=>window.siwcAccount.reauthorize(),'Approve ChatGPT plan usage in your browser.'));
+  $('disconnect').addEventListener('click',()=>action(()=>window.siwcAccount.disconnect(),'Disconnecting…'));
+  $('model').addEventListener('change',e=>action(()=>window.siwcAccount.selectModel(e.target.value),'Saving model…'));
+  $('test').addEventListener('click',()=>action(async()=>{const v=await window.siwcAccount.test();note('Connected via '+v.model+': '+v.answer);},'Sending a small verification request…'));
+  $('usage').addEventListener('click',()=>window.siwcAccount.usage());
+  refresh().catch(e=>note(e.message||'Could not connect to ChatGPT worker',true));
+})();
+</script></main></body></html>

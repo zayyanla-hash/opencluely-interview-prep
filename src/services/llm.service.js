@@ -289,6 +289,7 @@ class LLMService {
         }
       };
     } catch (error) {
+      if ((process.env.AI_PROVIDER || '').toLowerCase() === 'chatgpt') throw error;
       logger.warn('Streaming image analysis failed, falling back to non-streaming', {
         error: error.message,
         requestId: this.requestCount
@@ -429,6 +430,7 @@ class LLMService {
         }
       };
     } catch (error) {
+      if ((process.env.AI_PROVIDER || '').toLowerCase() === 'chatgpt') throw error;
       logger.warn('Streaming text failed, falling back to non-streaming', {
         error: error.message,
         requestId: this.requestCount
@@ -1019,6 +1021,7 @@ Remember: Be intelligent about filtering - only provide detailed responses when 
         }
       };
     } catch (error) {
+      if ((process.env.AI_PROVIDER || '').toLowerCase() === 'chatgpt') throw error;
       logger.warn('Streaming transcription failed, falling back to non-streaming', {
         error: error.message,
         requestId: this.requestCount
@@ -1653,4 +1656,11 @@ Remember: Be intelligent about filtering - only provide detailed responses when 
   }
 }
 
-module.exports = new LLMService();
+const openCluelyLLM = new LLMService();
+const openCluelyMode = (process.env.AI_PROVIDER || '').toLowerCase();
+if (openCluelyMode === 'local') {
+  require('../../local/adapter').attachLocalAdapter(openCluelyLLM);
+} else if (openCluelyMode === 'chatgpt') {
+  require('../../auth/chatgpt-adapter').attachChatGPTAdapter(openCluelyLLM);
+}
+module.exports = openCluelyLLM;

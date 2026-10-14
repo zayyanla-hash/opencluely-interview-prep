@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'none'; base-uri 'none'; form-action 'none'; frame-src 'none'">
+<title>OpenCluely Live</title>
+<link rel="stylesheet" href="overlay.css">
+<script src="overlay.js" defer></script>
+</head>
+<body>
+
+<div class="drag-strip" aria-hidden="true"><span class="drag-title">OpenCluely Live</span></div>
+
+<header>
+  <div class="status-bar">
+    <div class="status-row status-row-main">
+      <span id="ov-state" class="state-pill">NOT STARTED</span>
+      <div class="row header-actions">
+        <button id="ov-pause" hidden>Pause</button>
+        <button id="ov-resume" hidden>Resume</button>
+        <button id="ov-stop" disabled>Stop</button>
+      </div>
+    </div>
+    <div class="status-row status-row-chips">
+      <span id="ov-audio" class="chip-text">Not listening</span>
+      <span id="ov-mic" class="chip-text">Mic off</span>
+    </div>
+  </div>
+</header>
+
+<div id="err" role="alert"></div>
+
+<div class="scroll-area">
+
+<section>
+  <h2>Question</h2>
+  <p id="q">Start live assistance from the main window.</p>
+  <p id="qmeta" class="muted"></p>
+</section>
+
+<section>
+  <h2>Suggested answer</h2>
+  <p id="ans-status" class="state-pill" hidden></p>
+  <p id="ans-note" class="muted" hidden>Checks grounding against your saved facts; still verify claims yourself.</p>
+  <p id="opening" class="opening">Your answer will appear here.</p>
+  <ul id="pts"></ul>
+  <div id="time" class="muted" aria-live="polite"></div>
+</section>
+
+<section class="controls">
+  <div class="row">
+    <button id="shorter">Shorter</button>
+    <button id="deeper">Deeper</button>
+    <button id="regen">Regenerate</button>
+    <label class="switch-label"><input type="checkbox" id="autom" checked><span class="switch-track" aria-hidden="true"></span> Auto</label>
+  </div>
+  <div class="row">
+    <input id="manual" maxlength="4000" placeholder="Manual question">
+    <button id="gen">Generate</button>
+  </div>
+</section>
+
+<details><summary>History</summary><ol id="hist"></ol></details>
+<details><summary>Evidence</summary><div id="evidence"></div></details>
+<details><summary>Diagnostics</summary><div id="count" class="muted"></div><p id="prov" class="muted"></p></details>
+
+</div>
+
+<footer class="muted">Visible assistant. Nothing is hidden.</footer>
+</body>
+</html>

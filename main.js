@@ -3,6 +3,8 @@ const fs = require("fs");
 const { fileURLToPath } = require("url");
 const { app, BrowserWindow, globalShortcut, session, ipcMain } = require("electron");
 
+app.setName('OpenCluely'); // Keep the OS credential-store identity stable before first safeStorage use.
+app.setPath('userData', app.isPackaged ? path.join(app.getPath('appData'), 'OpenCluely-Interview-Prep') : path.join(__dirname, '.app-data'));
 // ── Resolve a stable .env location ──
 // In packaged builds process.cwd() is unstable and frequently read-only
 // (NSIS install dir, AppImage mount, .app bundle), so the canonical config
@@ -103,6 +105,7 @@ process.on("unhandledRejection", (reason) => {
 const captureService = require("./src/services/capture.service");
 const speechService = require("./src/services/speech.service");
 const llmService = require("./src/services/llm.service");
+require('./auth/account-window').install({autoOpen: process.env.OPENCLUELY_LEGACY === '1' && process.env.AI_PROVIDER === 'chatgpt'});
 
 // Managers
 const windowManager = require("./src/managers/window.manager");
@@ -162,9 +165,9 @@ class ApplicationController {
 
     // Set default stealth app name early
     if (app && typeof app.setName === 'function') {
-      app.setName("Terminal ");
+      app.setName((process.env.AI_PROVIDER || '').toLowerCase() === 'chatgpt' ? 'OpenCluely' : 'Terminal ');
     }
-    process.title = "Terminal ";
+    process.title = (process.env.AI_PROVIDER || '').toLowerCase() === 'chatgpt' ? 'OpenCluely' : 'Terminal ';
 
     if (
       process.platform === "darwin" &&
@@ -226,8 +229,8 @@ class ApplicationController {
     this.starting = true;
 
     // Force stealth mode IMMEDIATELY when app is ready
-    app.setName("Terminal ");
-    process.title = "Terminal ";
+    app.setName((process.env.AI_PROVIDER || '').toLowerCase() === 'chatgpt' ? 'OpenCluely' : 'Terminal ');
+    process.title = (process.env.AI_PROVIDER || '').toLowerCase() === 'chatgpt' ? 'OpenCluely' : 'Terminal ';
 
     logger.info("Application starting", {
       version: config.get("app.version"),
@@ -323,7 +326,7 @@ class ApplicationController {
     // Handle certificate errors for Google APIs
     ses.setCertificateVerifyProc((request, callback) => {
       if (request.hostname === 'generativelanguage.googleapis.com') {
-        callback(0); // Trust Google's certificates
+        callback(-2); // Always use normal certificate verification
       } else {
         callback(-2); // Use default verification
       }
@@ -1914,6 +1917,7 @@ class ApplicationController {
   }
 
   updateAppName(appName, iconKey) {
+    if ((process.env.AI_PROVIDER || "").toLowerCase() === "chatgpt") { appName = "OpenCluely"; }
     try {
       const { app } = require("electron");
 
@@ -1985,6 +1989,10 @@ const gotSingleInstanceLock = app.requestSingleInstanceLock();
 if (!gotSingleInstanceLock) {
   app.quit();
 } else {
+  if (process.env.OPENCLUELY_LEGACY !== "1") {
+    require("./prep/window").install();
+  } else {
   const controller = new ApplicationController();
   app.on("second-instance", () => controller.handleSecondInstance());
+  }
 }

@@ -4,7 +4,7 @@ const os = require('os');
 class ConfigManager {
   constructor() {
     this.env = process.env.NODE_ENV || 'development';
-    this.appDataDir = path.join(os.homedir(), '.OpenCluely');
+    this.appDataDir = path.join(require('electron').app?.getPath('userData') || path.join(__dirname, '../../.app-data'));
     this.loadConfiguration();
   }
 

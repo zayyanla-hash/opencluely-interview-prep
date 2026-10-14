@@ -1,0 +1,228 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'none'; base-uri 'none'; form-action 'none'; frame-src 'none'">
+<title>OpenCluely · Interview Prep</title>
+<link rel="stylesheet" href="style.css">
+<script src="renderer.js" defer></script>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<div class="app">
+
+<header class="topbar">
+  <span class="brand">OpenCluely</span>
+  <div class="topbar-controls">
+    <label class="sr-only" for="brief-list">Company context</label>
+    <select id="brief-list" class="company-select"><option value="">Add a company</option></select>
+    <button id="new-brief" class="text-btn">Add company</button>
+    <span id="conn-indicator" class="conn" hidden><span id="conn-dot" class="dot" aria-hidden="true"></span><span id="conn-text">Checking…</span></span>
+    <button id="account" class="text-btn">Connect ChatGPT</button>
+    <button id="more-btn" class="pill-btn" aria-haspopup="true" aria-expanded="false" aria-controls="more-menu">More</button>
+  </div>
+</header>
+
+<div id="more-menu" class="drawer" hidden role="menu" aria-label="More options">
+  <button class="drawer-item" data-view="profile" role="menuitem">Résumé &amp; experience</button>
+  <button class="drawer-item" data-view="brief" role="menuitem">Company details</button>
+  <button class="drawer-item" data-view="mock" role="menuitem">Practice history &amp; review</button>
+  <button class="drawer-item" data-view="settings" role="menuitem">Model &amp; provider</button>
+  <button class="drawer-item" data-view="privacy" role="menuitem">Privacy details</button>
+  <button id="more-close" class="drawer-item" role="menuitem">Close</button>
+</div>
+
+<main id="main">
+<div id="notice" role="status" aria-live="polite"></div>
+
+<div id="context-line" class="context-line">
+  <span><b id="context-company">Add a company to begin</b> <span id="context-role" class="muted"></span></span>
+  <button id="edit-brief" class="text-btn">Edit →</button>
+</div>
+
+<div id="mode-switch" class="mode-switch" role="group" aria-label="Mode">
+  <button id="mode-practice" class="mode-btn" data-mode="practice" aria-pressed="true">Practice</button>
+  <button id="mode-live" class="mode-btn" data-mode="live" aria-pressed="false">Live assistance</button>
+</div>
+
+<div id="mode-content">
+
+<section id="view-practice" class="view">
+  <label for="question">Interview question</label>
+  <textarea id="question" rows="4" maxlength="4000" placeholder="Tell me about yourself for this role."></textarea>
+
+  <div class="row-actions">
+    <button id="answer-run" class="primary">Get answer</button>
+    <button id="pick-image" class="secondary">Attach image</button>
+    <button id="import-audio" class="secondary">Transcribe audio file</button>
+    <button id="cancel" class="secondary" disabled>Stop</button>
+  </div>
+
+  <div id="image-preview-wrap" class="chip" hidden>
+    <img id="image-preview" alt="Selected image preview">
+    <span id="image-name"></span>
+    <button id="remove-image" class="chip-remove">Remove</button>
+  </div>
+  <p id="media-status" class="muted">Nothing is recorded or captured.</p>
+
+  <article class="answer-card" aria-live="polite">
+    <div class="answer-head">
+      <span id="answer-state" class="state-pill">Ready</span>
+      <span id="timing" class="muted"></span>
+    </div>
+    <p id="opening" class="opening">Your answer will appear here.</p>
+    <ul id="points"></ul>
+    <details id="detail-wrap">
+      <summary>More detail</summary>
+      <div id="expansion-wrap"><p id="expansion"></p></div>
+      <div id="deeper-wrap"><p id="deeper"></p></div>
+    </details>
+    <details id="evidence-wrap">
+      <summary>Evidence</summary>
+      <div id="evidence"></div>
+    </details>
+    <div id="gaps" class="gaps"></div>
+  </article>
+
+  <button id="open-mock" class="text-link">Mock interview →</button>
+</section>
+
+<section id="view-live" class="view" hidden>
+  <div class="row-actions">
+    <label class="sr-only" for="live-app">Listen to</label>
+    <select id="live-app"><option value="">Select an app…</option></select>
+    <button id="live-refresh-apps" class="secondary">Refresh</button>
+  </div>
+
+  <label class="check"><input type="checkbox" id="live-mic"> Include my microphone</label>
+  <p class="muted">Mic is context only, never auto-answered. Off by default.</p>
+
+  <label class="check"><input type="checkbox" id="live-capture-consent"> Interviewer rules allow this and participants consent.</label>
+  <p class="muted">Nothing is recorded until you press Start.</p>
+
+  <div class="row-actions">
+    <button id="live-start" class="primary">Start live assistance</button>
+    <button id="live-pause" class="secondary" disabled>Pause</button>
+    <button id="live-resume" class="secondary" disabled>Resume</button>
+    <button id="live-stop" class="secondary" disabled>Stop</button>
+  </div>
+
+  <p class="status-line" aria-live="polite"><span id="live-state" class="state-pill">NOT STARTED</span> <span id="live-status">Not started.</span></p>
+
+  <details id="live-more-wrap">
+    <summary>More options</summary>
+    <label class="check"><input type="checkbox" id="live-system"> Capture all system audio</label>
+    <label class="check"><input type="checkbox" id="live-auto" checked> Detect questions automatically</label>
+    <div class="row-actions">
+      <label class="sr-only" for="live-manual-question">Typed question</label>
+      <input id="live-manual-question" maxlength="4000" placeholder="Type a question">
+      <button id="live-manual" class="secondary">Generate</button>
+    </div>
+  </details>
+</section>
+
+</div>
+
+<div id="secondary-content" hidden>
+  <div class="secondary-head">
+    <button class="back-btn text-btn">← Back</button>
+    <h2 id="secondary-title" tabindex="-1"></h2>
+  </div>
+
+  <section id="sec-profile" class="view" hidden>
+    <div class="row-actions"><button id="profile-save" class="primary">Save profile</button></div>
+    <div class="form-grid">
+      <label>Name<input id="identity-name" maxlength="120"></label>
+      <label>Location<input id="identity-location" maxlength="180"></label>
+      <label class="full">Availability &amp; preferences<input id="availability" maxlength="600"></label>
+    </div>
+    <details>
+      <summary>Education and skill boundaries</summary>
+      <label for="degree">Completed bachelor's degree status, used only when directly asked</label>
+      <select id="degree"><option value="unknown">Not verified</option><option value="no">Confirmed no</option><option value="yes">Confirmed yes, add evidence below</option></select>
+      <label for="education">Accurate education detail, used only if asked</label>
+      <textarea id="education" rows="2" maxlength="900"></textarea>
+      <label for="skill-boundary">How to describe my coding experience</label>
+      <textarea id="skill-boundary" rows="2" maxlength="900"></textarea>
+    </details>
+    <label for="card-picker">Experience card</label>
+    <select id="card-picker"></select>
+    <div id="card-fields" class="form-grid"></div>
+    <label for="card-facts">Verified / candidate-confirmed facts, one per line</label>
+    <textarea id="card-facts" rows="4" maxlength="8000"></textarea>
+    <label for="card-claims">Unverified claims, one per line, excluded from answer grounding</label>
+    <textarea id="card-claims" rows="2" maxlength="8000"></textarea>
+    <label for="card-questions">Questions I should be able to answer, one per line</label>
+    <textarea id="card-questions" rows="3" maxlength="8000"></textarea>
+    <div class="form-grid">
+      <label>Evidence label<input id="evidence-label" maxlength="250"></label>
+      <label>Evidence URL<input id="evidence-url" maxlength="1000" placeholder="https://…"></label>
+      <label class="full">Source excerpt<textarea id="evidence-excerpt" rows="3" maxlength="2000"></textarea></label>
+    </div>
+    <details>
+      <summary>Advanced editable profile JSON</summary>
+      <p class="muted">Use this for additional cards, collaborators or evidence entries. Apply JSON before saving.</p>
+      <textarea id="profile-json" rows="12"></textarea>
+      <button id="profile-json-apply" class="secondary">Apply JSON to editor</button>
+    </details>
+    <button id="profile-reset" class="danger">Reset profile to supplied facts</button>
+  </section>
+
+  <section id="sec-brief" class="view" hidden>
+    <div class="row-actions"><button id="brief-save" class="primary">Save company brief</button></div>
+    <div class="form-grid">
+      <label>Company<input id="brief-company" maxlength="200" placeholder="Company name"></label>
+      <label>Role preset<select id="brief-role"></select></label>
+      <label>Brief date<input id="brief-date" type="date"></label>
+      <label>Interviewer name, optional<input id="brief-interviewer" maxlength="200"></label>
+      <label class="full">Job description, pasted as untrusted context<textarea id="brief-jd" rows="6" maxlength="12000"></textarea></label>
+      <label class="full">Company notes / statements, with source URLs<textarea id="brief-notes" rows="4" maxlength="6000"></textarea></label>
+      <label class="full">Hypotheses to validate, not established company problems<textarea id="brief-hypotheses" rows="3" maxlength="4000"></textarea></label>
+      <label class="full">Selected resume text, not automatically treated as verified facts<textarea id="brief-resume" rows="6" maxlength="16000"></textarea></label>
+    </div>
+    <div class="row-actions">
+      <button id="brief-resume-import" class="secondary">Import resume .txt/.md</button>
+      <span class="muted">PDF upload is not supported; paste the text instead.</span>
+    </div>
+    <button id="brief-delete" class="danger">Delete this company context</button>
+  </section>
+
+  <section id="sec-mock" class="view" hidden>
+    <div class="row-actions"><button id="practice-start" class="secondary">Start / next question</button></div>
+    <p id="practice-question" class="practice-question">Start a practice question for the selected role.</p>
+    <label for="practice-answer">Your spoken answer, typed or pasted</label>
+    <textarea id="practice-answer" rows="6" maxlength="6000"></textarea>
+    <div class="row-actions">
+      <button id="practice-submit" class="primary" disabled>Save answer &amp; get feedback</button>
+      <button id="practice-follow" class="secondary" disabled>Practice the follow-up</button>
+      <button id="practice-ai" class="secondary" disabled>Deeper model critique</button>
+      <button id="practice-cancel" class="secondary" disabled>Stop</button>
+    </div>
+    <div id="practice-feedback" class="answer-card"></div>
+    <div class="row-actions">
+      <button id="practice-review" class="secondary">Review practice &amp; cheat sheet</button>
+      <button id="clear-practice" class="danger">Delete practice history</button>
+    </div>
+    <p class="muted">Saved practice answers remain unverified.</p>
+  </section>
+
+  <section id="sec-settings" class="view" hidden>
+    <label for="provider">Model provider</label>
+    <select id="provider"><option value="chatgpt">ChatGPT subscription</option><option value="local">Local configured server</option></select>
+    <p id="provider-status" role="status">Checking connection…</p>
+    <label for="model-select">Model</label>
+    <select id="model-select"><option value="">Default</option></select>
+    <button id="refresh-provider" class="secondary">Refresh</button>
+  </section>
+
+  <section id="sec-privacy" class="view" hidden>
+    <h3>What is sent to the selected provider?</h3>
+    <p>A compact candidate summary, up to three relevant verified cards, selected excerpts from this company's brief and resume, your question, and up to four practice turns from this company. Unverified resume text does not establish facts. The full resume library is not sent. ChatGPT requests go to OpenAI through your authorized connection; local requests go to the configured loopback endpoint. An attached image is also sent when you submit an answer. Imported audio stays on this Mac for transcription; its reviewed text is sent only when you submit it. Attachments are kept in memory and cleared when you switch company.</p>
+  </section>
+</div>
+
+</main>
+</div>
+</body>
+</html>

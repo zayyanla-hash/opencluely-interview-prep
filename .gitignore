@@ -7,3 +7,10 @@ dist/
 bin/
 .DS_Store
 *.log
+
+.app-data/
+.siwc-devkit/
+vendor/siwc-local/
+
+# Compiled native helper binary (build it with `npm run build:native`)
+prep/native/sckit-audio

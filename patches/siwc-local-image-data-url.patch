@@ -1,0 +1,55 @@
+diff --git a/packages/local/src/responses.ts b/packages/local/src/responses.ts
+index dd9f6f6..6a43327 100644
+--- a/packages/local/src/responses.ts
++++ b/packages/local/src/responses.ts
+@@ -2,6 +2,19 @@ import OpenAI from "openai";
+ import { apiError, ChatGPTError, isObject } from "./errors.js";
+ import type { StreamResponseOptions } from "./types.js";
+ 
++// OpenCluely local-image extension (noncommercial personal use)
++function validInputContent(message: Record<string, unknown>): boolean {
++  if (typeof message.content === 'string') return true;
++  if (message.role !== 'user' || !Array.isArray(message.content) || message.content.length === 0) return false;
++  return message.content.every((part: unknown) => {
++    if (!isObject(part)) return false;
++    if (part.type === 'input_text') return typeof part.text === 'string' && part.text.length < 1000000;
++    if (part.type === 'input_image') return typeof part.image_url === 'string' && part.image_url.length < 15000000 &&
++      /^data:image\/(png|jpeg|webp|gif);base64,[A-Za-z0-9+/]+={0,2}$/.test(part.image_url);
++    return false;
++  });
++}
++
+ export async function streamResponse(
+   accessToken: string,
+   options: StreamResponseOptions,
+@@ -9,7 +22,7 @@ export async function streamResponse(
+ ): Promise<{ text: string }> {
+   const input = typeof options.input === "string" ? [{ role: "user" as const, content: options.input }] : options.input;
+   if (!Array.isArray(input) || input.some((message) =>
+-    !isObject(message) || !["user", "assistant", "developer"].includes(String(message.role)) || typeof message.content !== "string"
++    !isObject(message) || !["user", "assistant", "developer"].includes(String(message.role)) || !validInputContent(message)
+   )) {
+     throw new ChatGPTError("invalid_request", "Use text messages with user, assistant, or developer roles. Put system guidance in instructions.");
+   }
+@@ -40,7 +53,7 @@ export async function streamResponse(
+   try {
+     const result = await client.responses.create({
+       model: options.model,
+-      input: input.map((message) => ({ role: message.role, content: message.content })),
++      input: input.map((message) => ({ role: message.role, content: message.content })) as any,
+       ...(options.instructions !== undefined ? { instructions: options.instructions } : {}),
+       store: false,
+       stream: true,
+diff --git a/packages/local/src/types.ts b/packages/local/src/types.ts
+index e80f3d2..5d29426 100644
+--- a/packages/local/src/types.ts
++++ b/packages/local/src/types.ts
+@@ -69,7 +69,7 @@ export interface ChatGPTConfig {
+ 
+ export interface ResponseInputMessage {
+   role: "user" | "assistant" | "developer";
+-  content: string;
++  content: string | ({ type: "input_text"; text: string } | { type: "input_image"; image_url: string })[];
+ }
+ 
+ export interface StreamResponseOptions {

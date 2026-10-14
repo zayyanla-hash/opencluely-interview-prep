@@ -351,7 +351,7 @@ if (typeof window === 'undefined') {
   global.navigator = global.window.navigator;
   global.AudioContext = global.window.AudioContext;
   global.webkitAudioContext = global.window.webkitAudioContext;
-  global.URL = global.window.URL;
+  global.URL = require('node:url').URL; // Preserve real URL validation for OAuth and local endpoints.
   global.Blob = global.window.Blob;
   global.File = global.window.File;
 

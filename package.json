@@ -1,7 +1,7 @@
 {
-  "name": "opencluely",
+  "name": "opencluely-interview-prep",
   "version": "1.0.0",
-  "description": "AI Problem Solving Assistant",
+  "description": "Visible, consent-first interview practice and permitted live assistance. Fork of OpenCluely with ChatGPT sign-in, local Whisper transcription and a glass UI.",
   "main": "main.js",
   "scripts": {
     "start": "env -u ELECTRON_RUN_AS_NODE electron .",
@@ -17,18 +17,24 @@
     "clean": "rm -rf dist/",
     "rebuild": "npm run clean && npm run build",
     "release": "npm run clean && npm run build:all",
-    "postinstall": "electron-builder install-app-deps"
+    "postinstall": "electron-builder install-app-deps",
+    "test": "node --test tests/*.test.js",
+    "build:prep": "electron-builder --dir --mac --arm64",
+    "build:native": "swiftc prep/native/sckit-audio.swift -o prep/native/sckit-audio -framework ScreenCaptureKit -framework AVFoundation -framework AppKit -O",
+    "test:native": "node scripts/native-selftest.js"
   },
-  "author": {
-    "name": "TechyCSR",
-    "email": "info@techycsr.dev",
-    "url": "https://techycsr.dev"
-  },
+  "contributors": [
+    {
+      "name": "TechyCSR",
+      "email": "info@techycsr.dev",
+      "url": "https://techycsr.dev"
+    }
+  ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/TechyCSR/OpenCluely"
+    "url": "https://github.com/zayyanla-hash/opencluely-interview-prep"
   },
-  "license": "ISC",
+  "license": "Apache-2.0",
   "dependencies": {
     "@fortawesome/fontawesome-free": "^7.2.0",
     "@google/genai": "^2.9.0",
@@ -62,12 +68,22 @@
       "!bin/**/*",
       "!scripts/__pycache__/**/*",
       "!**/*.pyc",
-      "!eng.traineddata"
+      "!eng.traineddata",
+      "!.app-data/**/*",
+      "!.siwc-devkit/**/*",
+      "!tests/**/*",
+      "!docs/**/*",
+      "!CLAUDE.md"
     ],
     "asarUnpack": [
       "assests/icons/**/*",
       "prompts/**/*",
-      "scripts/whisper_worker.py"
+      "scripts/whisper_worker.py",
+      "auth/**/*",
+      "node_modules/**/*",
+      "prep/transcribe-file.py",
+      "prep/transcribe-live.py",
+      "prep/native/sckit-audio"
     ],
     "mac": {
       "category": "public.app-category.utilities",
@@ -93,7 +109,7 @@
       "extendInfo": {
         "NSMicrophoneUsageDescription": "OpenCluely uses the microphone to transcribe your speech locally with Whisper.",
         "NSCameraUsageDescription": "OpenCluely does not record video; this entitlement is only present for media-capture compatibility.",
-        "NSScreenCaptureUsageDescription": "OpenCluely captures the screen to read on-screen content for AI assistance."
+        "NSScreenCaptureUsageDescription": "OpenCluely captures system/meeting audio (no screen images) for permitted live interview assistance."
       }
     },
     "win": {

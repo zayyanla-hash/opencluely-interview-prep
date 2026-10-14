@@ -1,0 +1,35 @@
+name: Test
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    name: npm test (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-latest]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      # The ChatGPT sign-in SDK (@siwc/local) is intentionally not an npm
+      # dependency and is not installed here — it is noncommercially
+      # licensed and set up separately via scripts/setup-chatgpt-sdk.sh.
+      # The test suite must not require it to be present.
+      - name: Run tests
+        run: npm test
